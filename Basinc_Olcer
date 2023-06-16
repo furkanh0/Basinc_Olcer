@@ -1,0 +1,59 @@
+#include <LiquidCrystal_I2C.h>
+#include <AvrI2c_Greiman.h>
+#include <SFE_BMP180.h>
+#include <Wire.h>
+LiquidCrystal_I2C lcdekranim(0x27,16,2);
+SFE_BMP180 bmp180;  // bmp180 adında bir sensör nesnesi oluştur.
+
+void setup() {
+  Serial.begin(9600);
+  lcdekranim.init();
+  lcdekranim.backlight();
+  
+  bool basarili = bmp180.begin();
+  if (basarili) {
+    Serial.println("BMP180 başlatıldı.");
+    lcdekranim.setCursor(0,0);
+    lcdekranim.print("BMP180");
+    lcdekranim.setCursor(0,1);
+    lcdekranim.print("baslatildi.");
+  }
+}
+void loop() {
+  char durum;  // Sensörden okunan durum
+  double T, P;  // Sıcaklık ve basınç değişkenleri
+  bool basarili = false;  // Sensör çalışıyor mu bilgisi değişkeni
+  durum = bmp180.startTemperature();
+  if (durum != 0) {
+    delay(1000);
+    durum = bmp180.getTemperature(T);
+    if (durum != 0) {
+      durum = bmp180.startPressure(3);
+      if (durum != 0) {
+        delay(durum);
+        durum = bmp180.getPressure(P, T);
+        if (durum != 0) {
+          lcdekranim.clear();
+          Serial.print("Basınc: ");
+          Serial.print(P);
+          Serial.println(" hPa");
+          Serial.print("Sıcaklık: ");
+          Serial.print(T);
+          Serial.println(" C");
+          lcdekranim.setCursor(0,0);
+          lcdekranim.print("Basinc:");
+          lcdekranim.setCursor(7,0);
+          lcdekranim.print(P);
+          lcdekranim.setCursor(13,0);
+          lcdekranim.print("hPa");
+          lcdekranim.setCursor(0,1);
+          lcdekranim.print("Sicaklik:");
+          lcdekranim.setCursor(9,1);
+          lcdekranim.print(T);
+          lcdekranim.setCursor(15,1);
+          lcdekranim.print("C");
+        }
+      }
+    }
+  }
+}
